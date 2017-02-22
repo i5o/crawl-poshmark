@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 from scrapy import signals
 from scrapy import Spider
 from scrapy import Request
@@ -32,7 +33,7 @@ class ProductsSpider(Spider):
         Creates a request with the website_url, then the data is analyzed
         by self.parse
         """
-        website_url = "https://poshmark.com/category/Women"
+        website_url = "https://poshmark.com/category/Women?sort_by=price_asc"
         yield Request(url=website_url, callback=self.parse)
         pass
 
@@ -69,8 +70,7 @@ class ProductsSpider(Spider):
 
         # Creates the next page url
         # https://poshmark.com//category/Women?max_id=[next_page]
-        next_url = "https://poshmark.com//category/Women?max_id=%d" % (
-            self.current_page)
+        next_url = "https://poshmark.com//category/Women?max_id=%d&sort_by=price_asc" % (self.current_page)
 
         # Simple recursion. Calls self.parse with the Next page url.
         yield Request(url=next_url, callback=self.parse)
@@ -177,6 +177,6 @@ class ProductsSpider(Spider):
                 item["subsubcategory"][0], item["colors"][0], item["price"][0],
                 ", ".join(item["image_urls"]))
 
-            csv_file = open("products.csv", "w")
+            csv_file = open("products.csv", "w", encoding=sys.stdout.encoding)
             csv_file.write(txt)
             csv_file.close()
