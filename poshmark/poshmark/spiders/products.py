@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import re
 from scrapy import signals
 from scrapy import Spider
 from scrapy import Request
@@ -17,8 +18,11 @@ class ProductsSpider(Spider):
     """
     name = "products"
     max_pages = 50  # Set this to 0 to remove the limit
+    totalPages = max_pages
     current_page = 1
     items = []
+    totalitems = 0
+    links = []
 
     def __init__(self):
         dispatcher.connect(self.crawl_over, signals.spider_closed)
@@ -45,6 +49,7 @@ class ProductsSpider(Spider):
 
         All the products have a div with the class "col-x12 col-l6 col-s8"
         """
+        addedthistime = 0
         products = response.xpath('//div[@class="col-x12 col-l6 col-s8"]')
 
         for product in products:
@@ -53,15 +58,26 @@ class ProductsSpider(Spider):
             product_link = "https://poshmark.com" + product.xpath(
                 './/a[@class="covershot-con"]/@href').extract()[0]
 
-            yield Request(url=product_link, callback=self.parse_product_data)
+            if not product_link in self.links and self.totalitems <= (self.totalPages * 48)+1:
+                addedthistime += 1
+                self.totalitems += 1
+                self.links.append(product_link)
+                yield Request(url=product_link, callback=self.parse_product_data)
 
-        # If we are in a page that is multiple of 10, lets write the csv data.
-        if not (self.current_page % 10):
+        # If we are in a page that is multiple of 20, lets write the csv data.
+        if not (self.current_page % 20):
             self.create_csv_file()
-            self.log("page multiple of 10 --> CSV file created.")
+            self.log("page multiple of 20 --> CSV file created.")
 
         if (self.max_pages == self.current_page):
-            return
+            if self.totalitems <= (self.totalPages * 48):
+                if self.current_page > 48:
+                    self.current_page = 0
+                    self.max_pages = 48
+                else:
+                    self.max_pages += 1
+            else:
+                return
 
         self.current_page += 1
         self.log(
@@ -73,7 +89,7 @@ class ProductsSpider(Spider):
         next_url = "https://poshmark.com//category/Women?max_id=%d&sort_by=price_asc" % (self.current_page)
 
         # Simple recursion. Calls self.parse with the Next page url.
-        yield Request(url=next_url, callback=self.parse)
+        yield Request(url=next_url, callback=self.parse, dont_filter=True)
 
     def parse_product_data(self, response):
         """
@@ -152,7 +168,7 @@ class ProductsSpider(Spider):
         return loaded_item
 
     def create_csv_file(self):
-        txt = """id, url, title, description, size, category, subcategory, subsubcategory, colors, price, image urls
+        txt = """id, url, title, description, size, category, subcategory, colors, price, image urls
 """
         sorted_items = sorted(
             self.items,
@@ -164,17 +180,25 @@ class ProductsSpider(Spider):
             # Replace new lines for two spaces
             # and due to restrictions with csv replace " for ''
 
+            myre = re.compile(u'['
+                 u'\U0001F300-\U0001F64F'
+                 u'\U0001F680-\U0001F6FF'
+                 u'\u2600-\u26FF\u2700-\u27BF]+', 
+                 re.UNICODE)
+
             description = item["description"][0]
             description = description.replace('"', "'")
             description = description.replace('\n', "  ")
+            description = myre.sub('', description)
             title = item["title"][0].replace('\n', "  ")
+            title = myre.sub('', title)
             size = item["size"][0]
             size = size.replace('"', "''")
 
-            txt += '''"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"
+            txt += '''"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"
 ''' % (item["id_"][0], item["url"][0], title, description,
-                size, item["category"][0], item["subcategory"][0],
-                item["subsubcategory"][0], item["colors"][0], item["price"][0],
+                size, item["subcategory"][0], item["subsubcategory"][0],
+                item["colors"][0], item["price"][0],
                 ", ".join(item["image_urls"]))
 
             csv_file = open("products.csv", "w", encoding=sys.stdout.encoding)
