@@ -49,7 +49,6 @@ class ProductsSpider(Spider):
 
         All the products have a div with the class "col-x12 col-l6 col-s8"
         """
-        addedthistime = 0
         products = response.xpath('//div[@class="col-x12 col-l6 col-s8"]')
 
         for product in products:
@@ -58,8 +57,7 @@ class ProductsSpider(Spider):
             product_link = "https://poshmark.com" + product.xpath(
                 './/a[@class="covershot-con"]/@href').extract()[0]
 
-            if not product_link in self.links and self.totalitems <= (self.totalPages * 48):
-                addedthistime += 1
+            if not product_link in self.links and self.totalitems < (self.totalPages * 48):
                 self.totalitems += 1
                 self.links.append(product_link)
                 yield Request(url=product_link, callback=self.parse_product_data)
@@ -71,7 +69,7 @@ class ProductsSpider(Spider):
             self.log("--> CSV file created")
 
         if (self.max_pages == self.current_page):
-            if self.totalitems <= (self.totalPages * 48):
+            if self.totalitems < (self.totalPages * 48):
                 if self.current_page > 48:
                     self.current_page = 0
                     self.max_pages = 48
