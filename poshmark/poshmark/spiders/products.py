@@ -58,7 +58,7 @@ class ProductsSpider(Spider):
             product_link = "https://poshmark.com" + product.xpath(
                 './/a[@class="covershot-con"]/@href').extract()[0]
 
-            if not product_link in self.links and self.totalitems <= (self.totalPages * 48)+1:
+            if not product_link in self.links and self.totalitems <= (self.totalPages * 48):
                 addedthistime += 1
                 self.totalitems += 1
                 self.links.append(product_link)
@@ -66,8 +66,9 @@ class ProductsSpider(Spider):
 
         # If we are in a page that is multiple of 20, lets write the csv data.
         if not (self.current_page % 20):
+            self.log("--> page multiple of 20")
             self.create_csv_file()
-            self.log("page multiple of 20 --> CSV file created.")
+            self.log("--> CSV file created")
 
         if (self.max_pages == self.current_page):
             if self.totalitems <= (self.totalPages * 48):
@@ -78,6 +79,9 @@ class ProductsSpider(Spider):
                     self.max_pages += 1
             else:
                 return
+
+        if self.totalitems >= self.totalPages * 48:
+            return
 
         self.current_page += 1
         self.log(
