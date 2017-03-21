@@ -86,7 +86,8 @@ class ProductsSpider(Spider):
 
         # Creates the next page url
         # https://poshmark.com//category/Women?max_id=[next_page]
-        next_url = "https://poshmark.com//category/Women?max_id=%d&sort_by=price_asc" % (self.current_page)
+        # &sort_by=price_asc
+        next_url = "https://poshmark.com//category/Women?max_id=%d" % (self.current_page)
 
         # Simple recursion. Calls self.parse with the Next page url.
         yield Request(url=next_url, callback=self.parse, dont_filter=True)
