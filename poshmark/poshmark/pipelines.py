@@ -29,10 +29,13 @@ class ProductImage(ImagesPipeline):
         if not os.path.exists(path):
             os.mkdir(path)
 
-        if not os.path.exists("%s/%s" % (path, product_id)):
-            os.mkdir("%s/%s" % (path, product_id))
+        if not os.path.exists("%s/images" % path):
+            os.mkdir("%s/images" % path)
 
-        return '%s/%s/%s' % (path, product_id, filename)
+        if not os.path.exists("%s/images/%s" % (path, product_id)):
+            os.mkdir("%s/images/%s" % (path, product_id))
+
+        return '%s/images/%s/%s' % (path, product_id, filename)
 
     def get_media_requests(self, item, info):
         """
