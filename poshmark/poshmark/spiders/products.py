@@ -152,8 +152,7 @@ class ProductsSpider(Spider):
         item.add_value('colors', product_colors)
         item.add_value('price', product_price)
 
-        print(self.current)
-        print(product_tite)
+        print(self.current, product_title)
         # Once all the data is added, we call "load_item", which basically
         # will call the pipeline to download of images /if enabled/
         loaded_item = item.load_item()
