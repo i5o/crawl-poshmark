@@ -13,6 +13,7 @@ USER_AGENT = "Mozilla/5.0 (X11; CrOS armv7l 9280.0.0) AppleWebKit/537.36 (KHTML,
 ITEM_PIPELINES = {'poshmark.pipelines.ProductImage': 1}
 LINK = "XXX"
 CAT_PATH = "YYY"
+IMAGES_STORE = os.getcwd()
 """
 
 
@@ -26,3 +27,4 @@ for link in links.keys():
         process = CrawlerProcess(settings)
         process.crawl('products')
         process.start()
+        print("start")
