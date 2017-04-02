@@ -3,6 +3,7 @@
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from links import links
+import os
 
 template = """# -*- coding: utf-8 -*-
 import os
@@ -11,7 +12,7 @@ SPIDER_MODULES = ['poshmark.spiders']
 NEWSPIDER_MODULE = 'poshmark.spiders'
 USER_AGENT = "Mozilla/5.0 (X11; CrOS armv7l 9280.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3007.0 Safari/537.36"
 ITEM_PIPELINES = {'poshmark.pipelines.ProductImage': 1}
-LINK = "XXX?sort_by=price_asc"
+LINK = "XXX"
 CAT_PATH = "YYY"
 IMAGES_STORE = os.getcwd()
 """
@@ -24,13 +25,4 @@ for link in sorted(links.keys()):
         f = open("poshmark/settings.py", "w")
         f.write(template.replace("XXX", subsub[1]).replace("YYY", CAT_PATH))
         f.close()
-        settings = get_project_settings()
-        process = CrawlerProcess(settings)
-        process.crawl('products')
-        try:
-            process.start()
-            process.stop()
-
-        except:
-            process.stop()
-            pass
+        os.system("scrapy crawl products")

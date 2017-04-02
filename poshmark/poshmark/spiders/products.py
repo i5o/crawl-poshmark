@@ -38,7 +38,7 @@ class ProductsSpider(Spider):
         by self.parse
         """
         website_url = settings.get("LINK")
-        yield Request(url=website_url, callback=self.parse)
+        yield Request(url="%s?sort_by=price_asc" % website_url, callback=self.parse)
         pass
 
     def parse(self, response):
