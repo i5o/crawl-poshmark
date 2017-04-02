@@ -20,6 +20,7 @@ IMAGES_STORE = os.getcwd()
 
 for link in links.keys():
     for subsub in links[link]:
+        print("--- starting with %s/%s ----" % (link, subsub[0]))
         CAT_PATH = "data/%s/%s/" % (link, subsub[0]) # data/SubCat/SubSubCat/images
         f = open("poshmark/settings.py", "w")
         f.write(template.replace("XXX", subsub[1]).replace("YYY", CAT_PATH))

@@ -97,8 +97,6 @@ class ProductsSpider(Spider):
         if product_id == product_url:
             product_id = product_url.split("/")[-1]
 
-        print(settings.get("CAT_PATH"), product_url)
-
         product_title = response.xpath(
             '//h1[@class="title"]/text()').extract()[0]
         product_description = response.xpath(
