@@ -26,4 +26,3 @@ for link in links.keys():
         process = CrawlerProcess(settings)
         process.crawl('products')
         process.start()
-        break
