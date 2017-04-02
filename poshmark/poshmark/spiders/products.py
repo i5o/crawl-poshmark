@@ -21,6 +21,7 @@ class ProductsSpider(Spider):
     name = "products"
     max_pages = 50 # Set this to 0 to remove the limit
     current_page = 1
+    current = 0
     items = []
 
     def __init__(self):
@@ -89,6 +90,8 @@ class ProductsSpider(Spider):
         Basically it finds the element that has the data we are looking for.
         """
 
+        self.current += 1
+
         product_id = response.url.split("-")[-1]
         product_url = response.url
 
@@ -149,6 +152,8 @@ class ProductsSpider(Spider):
         item.add_value('colors', product_colors)
         item.add_value('price', product_price)
 
+        print(self.current)
+        print(product_tite)
         # Once all the data is added, we call "load_item", which basically
         # will call the pipeline to download of images /if enabled/
         loaded_item = item.load_item()

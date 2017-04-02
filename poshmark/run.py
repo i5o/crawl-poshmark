@@ -28,5 +28,7 @@ for link in links.keys():
         settings = get_project_settings()
         process = CrawlerProcess(settings)
         process.crawl('products')
-        process.start()
-        print("start")
+        try:
+            process.start()
+        except:
+            pass
