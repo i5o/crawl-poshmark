@@ -11,6 +11,7 @@ from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy.utils.project import get_project_settings
 settings = get_project_settings()
+from datetime import datetime
 
 class ProductsSpider(Spider):
     """
@@ -59,6 +60,7 @@ class ProductsSpider(Spider):
 
         # If we are in a page that is multiple of 20, lets write the csv data.
         if not (self.current_page % 20):
+            print("Page multiple of 20 -- %s" % datetime.strftime(datetime.now(), "%c"))
             self.log("--> page multiple of 20")
             self.create_csv_file()
             self.log("--> CSV file created")
@@ -67,8 +69,7 @@ class ProductsSpider(Spider):
             return
 
         self.current_page += 1
-        self.log(
-            "self.current_page has increased (it's %d)" %
+        print("self.current_page has increased (it's %d)" %
             self.current_page)
 
         # Creates the next page url
