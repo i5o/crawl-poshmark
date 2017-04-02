@@ -9,7 +9,8 @@ from scrapy.loader import ItemLoader
 from poshmark.items import Product
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
-
+from scrapy.utils.project import get_project_settings
+settings = get_project_settings()
 
 class ProductsSpider(Spider):
     """
@@ -17,12 +18,9 @@ class ProductsSpider(Spider):
     the website.
     """
     name = "products"
-    max_pages = 50  # Set this to 0 to remove the limit
-    totalPages = max_pages
+    max_pages = 50 # Set this to 0 to remove the limit
     current_page = 1
     items = []
-    totalitems = 0
-    links = []
 
     def __init__(self):
         dispatcher.connect(self.crawl_over, signals.spider_closed)
@@ -37,7 +35,7 @@ class ProductsSpider(Spider):
         Creates a request with the website_url, then the data is analyzed
         by self.parse
         """
-        website_url = "https://poshmark.com/category/Women?sort_by=price_asc"
+        website_url = settings.get("LINK")
         yield Request(url=website_url, callback=self.parse)
         pass
 
@@ -57,10 +55,7 @@ class ProductsSpider(Spider):
             product_link = "https://poshmark.com" + product.xpath(
                 './/a[@class="covershot-con"]/@href').extract()[0]
 
-            if not product_link in self.links and self.totalitems < (self.totalPages * 48):
-                self.totalitems += 1
-                self.links.append(product_link)
-                yield Request(url=product_link, callback=self.parse_product_data)
+            yield Request(url=product_link, callback=self.parse_product_data)
 
         # If we are in a page that is multiple of 20, lets write the csv data.
         if not (self.current_page % 20):
@@ -69,16 +64,6 @@ class ProductsSpider(Spider):
             self.log("--> CSV file created")
 
         if (self.max_pages == self.current_page):
-            if self.totalitems < (self.totalPages * 48):
-                if self.current_page > 48:
-                    self.current_page = 0
-                    self.max_pages = 48
-                else:
-                    self.max_pages += 1
-            else:
-                return
-
-        if self.totalitems >= self.totalPages * 48:
             return
 
         self.current_page += 1
@@ -89,10 +74,10 @@ class ProductsSpider(Spider):
         # Creates the next page url
         # https://poshmark.com//category/Women?max_id=[next_page]
         # &sort_by=price_asc
-        next_url = "https://poshmark.com//category/Women?max_id=%d" % (self.current_page)
+        next_url = "%s?max_id=%d&sort_by=price_asc" % (settings.get("LINK"), self.current_page)
 
         # Simple recursion. Calls self.parse with the Next page url.
-        yield Request(url=next_url, callback=self.parse, dont_filter=True)
+        yield Request(url=next_url, callback=self.parse)
 
     def parse_product_data(self, response):
         """
@@ -186,7 +171,7 @@ class ProductsSpider(Spider):
             myre = re.compile(u'['
                  u'\U0001F300-\U0001F64F'
                  u'\U0001F680-\U0001F6FF'
-                 u'\u2600-\u26FF\u2700-\u27BF]+', 
+                 u'\u2600-\u26FF\u2700-\u27BF]+',
                  re.UNICODE)
 
             description = item["description"][0]
@@ -204,6 +189,6 @@ class ProductsSpider(Spider):
                 item["colors"][0], item["price"][0],
                 ", ".join(item["image_urls"]))
 
-            csv_file = open("products.csv", "w", encoding=sys.stdout.encoding)
-            csv_file.write(txt)
+            csv_file = open("%s/products.csv" % settings.get("CAT_PATH"), "wb")
+            csv_file.write(txt.encode("utf-8"))
             csv_file.close()
